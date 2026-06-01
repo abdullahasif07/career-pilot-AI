@@ -1,11 +1,16 @@
+from pathlib import Path
+
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BACKEND_DIR = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
     app_name: str = "CareerPilot AI"
     debug: bool = True
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
+    database_url: str = f"sqlite:///{BACKEND_DIR / 'careerpilot.db'}"
 
     @field_validator("cors_origins", mode="before")
     @classmethod

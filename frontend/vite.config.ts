@@ -5,8 +5,13 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    strictPort: true,
     proxy: {
       "/health": {
+        target: "http://localhost:8000",
+        changeOrigin: true,
+      },
+      "/profile": {
         target: "http://localhost:8000",
         changeOrigin: true,
       },

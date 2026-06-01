@@ -265,13 +265,24 @@ CareerPilot AI integrates with external services via MCP (Model Context Protocol
 - API keys / OAuth for: Notion, Google Drive, Gmail, GitHub (as needed)
 - A master resume (`.pdf` or `.docx`) stored locally or in Google Drive
 
+### Setup (local development)
+
+```bash
+make install          # backend/.venv + npm deps
+cp backend/.env.example backend/.env   # optional
+make dev              # FastAPI :8000 + Vite :5173
+```
+
+Backend uses an isolated virtualenv at `backend/.venv`. See `make help` for all commands.
+
 ### Planned Setup Steps
 
 1. Clone this repository
-2. Configure MCP servers (Notion, Google Drive, Gmail, GitHub, Filesystem)
-3. Populate your personal knowledge base (profile, experience, projects, writing samples)
-4. Add your master resume
-5. Start with: *"Save this job"* → *"How good of a fit am I?"* → *"Apply to [Company]"*
+2. Run `make install` and `make dev`
+3. Configure MCP servers (Notion, Google Drive, Gmail, GitHub, Filesystem)
+4. Populate your personal knowledge base (profile, experience, projects, writing samples)
+5. Add your master resume
+6. Start with: *"Save this job"* → *"How good of a fit am I?"* → *"Apply to [Company]"*
 
 ---
 

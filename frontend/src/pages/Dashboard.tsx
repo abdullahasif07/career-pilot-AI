@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { ApiError, getHealth } from "../api/client";
+import { Link } from "react-router-dom";
+import { ApiError, getHealth, getProfile } from "../api/client";
+import type { Profile } from "../types/profile";
 
 type ConnectionState =
   | { kind: "loading" }
@@ -8,14 +10,16 @@ type ConnectionState =
 
 export default function Dashboard() {
   const [connection, setConnection] = useState<ConnectionState>({ kind: "loading" });
+  const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
-    getHealth()
-      .then((data) => {
+    Promise.all([getHealth(), getProfile()])
+      .then(([health, profileData]) => {
         if (!cancelled) {
-          setConnection({ kind: "connected", status: data.status });
+          setConnection({ kind: "connected", status: health.status });
+          setProfile(profileData);
         }
       })
       .catch((error: unknown) => {
@@ -33,40 +37,70 @@ export default function Dashboard() {
     };
   }, []);
 
+  const hasProfile = Boolean(profile?.name?.trim());
+
   return (
-    <main className="dashboard">
-      <header className="dashboard__header">
-        <p className="dashboard__eyebrow">Phase 0</p>
-        <h1>CareerPilot AI</h1>
-        <p className="dashboard__subtitle">
-          Your career copilot — frontend connected to FastAPI backend.
+    <main className="page dashboard">
+      <header className="page__header">
+        <p className="page__eyebrow">Dashboard</p>
+        <h1>Welcome back</h1>
+        <p className="page__subtitle">
+          CareerPilot AI uses your knowledge base to tailor every application.
         </p>
       </header>
 
-      <section className="status-card" aria-live="polite">
-        <h2>Backend status</h2>
-        {connection.kind === "loading" && <p>Checking connection…</p>}
+      <section className="card" aria-live="polite">
+        <h2 className="card__title">System status</h2>
+        {connection.kind === "loading" && <p className="muted">Checking connection…</p>}
         {connection.kind === "connected" && (
-          <p className="status-card__ok">
-            Connected — API responded with status: <code>{connection.status}</code>
+          <p className="status-pill status-pill--ok">
+            Backend connected · <code>{connection.status}</code>
           </p>
         )}
         {connection.kind === "error" && (
-          <p className="status-card__error">{connection.message}</p>
+          <p className="status-pill status-pill--error">{connection.message}</p>
         )}
       </section>
 
-      <section className="next-steps">
-        <h2>What this proves</h2>
-        <ul>
+      <section className="quick-actions">
+        <Link to="/profile" className="action-card">
+          <span className="action-card__icon" aria-hidden="true">
+            KB
+          </span>
+          <div>
+            <h2 className="action-card__title">Knowledge Base</h2>
+            <p className="action-card__desc">
+              {hasProfile
+                ? `Profile set for ${profile?.name}`
+                : "Add your profile — name, links, education"}
+            </p>
+          </div>
+          <span className="action-card__arrow" aria-hidden="true">
+            →
+          </span>
+        </Link>
+
+        <div className="action-card action-card--disabled">
+          <span className="action-card__icon" aria-hidden="true">
+            JD
+          </span>
+          <div>
+            <h2 className="action-card__title">Jobs</h2>
+            <p className="action-card__desc">Coming in Phase 2 — save & match job descriptions</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="card card--muted">
+        <h2 className="card__title">Phase 1 complete</h2>
+        <ul className="checklist">
           <li>
-            <code>frontend/src/api/client.ts</code> calls <code>GET /health</code>
+            <code>GET /profile</code> loads your knowledge base from SQLite
           </li>
           <li>
-            <code>backend/app/api/routes/health.py</code> responds with{" "}
-            <code>{`{"status": "ok"}`}</code>
+            <code>PUT /profile</code> persists changes from the Profile page
           </li>
-          <li>CORS is configured so the Vite dev server can talk to FastAPI</li>
+          <li>Frontend ↔ FastAPI full stack loop is working</li>
         </ul>
       </section>
     </main>

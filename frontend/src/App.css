@@ -588,6 +588,42 @@
   margin-top: 0.75rem;
 }
 
+.resume-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.resume-prompt {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  color: #475569;
+}
+
+.link-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  color: #4f46e5;
+  font-weight: 600;
+  font-size: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.link-btn:hover {
+  color: #4338ca;
+}
+
+.alert--info {
+  background: #eef2ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+  margin-bottom: 1.25rem;
+}
+
 .form-actions__feedback {
   margin: 0;
   font-size: 0.875rem;

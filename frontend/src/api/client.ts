@@ -1,4 +1,5 @@
 import type { Profile, ProfileUpdate } from "../types/profile";
+import type { ResumeExtraction } from "../types/resume";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
@@ -68,4 +69,8 @@ export function uploadResume(file: File): Promise<Profile> {
 
 export function deleteResume(): Promise<Profile> {
   return request<Profile>("/profile/resume", { method: "DELETE" });
+}
+
+export function extractResume(): Promise<ResumeExtraction> {
+  return request<ResumeExtraction>("/profile/resume/extract", { method: "POST" });
 }

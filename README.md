@@ -268,10 +268,12 @@ CareerPilot AI integrates with external services via MCP (Model Context Protocol
 ### Setup (local development)
 
 ```bash
-make install          # backend/.venv + npm deps
-cp backend/.env.example backend/.env   # optional
-make dev              # FastAPI :8000 + Vite :5173
+make install              # backend/.venv + npm deps
+cp .env.example .env      # add GEMINI_API_KEY for resume extraction
+make dev                  # FastAPI :8000 + Vite :5173
 ```
+
+All config lives in the **project root** `.env` (backend + frontend read from there).
 
 Backend uses an isolated virtualenv at `backend/.venv`. See `make help` for all commands.
 

@@ -4,8 +4,9 @@ import { ApiError, getProfile, updateProfile } from "../api/client";
 import FormField from "../components/FormField";
 import ProjectList from "../components/ProjectList";
 import ResumeUpload from "../components/ResumeUpload";
-import type { ProfileFormState, ResumeMeta } from "../types/profile";
+import type { ProfileFormState, ProfileUpdate, ResumeMeta } from "../types/profile";
 import { formToUpdate, profileToForm } from "../types/profile";
+import { mergeExtractionIntoForm } from "../types/resume";
 
 const emptyForm: ProfileFormState = {
   name: "",
@@ -42,6 +43,7 @@ export default function Profile() {
   const [form, setForm] = useState<ProfileFormState>(emptyForm);
   const [resume, setResume] = useState<ResumeMeta | null>(null);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+  const [aiDraft, setAiDraft] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -77,6 +79,12 @@ export default function Profile() {
     }
   }
 
+  function handleAiExtracted(extracted: ProfileUpdate) {
+    setForm((current) => mergeExtractionIntoForm(extracted, current));
+    setAiDraft(true);
+    setSaveState({ kind: "idle" });
+  }
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setSaveState({ kind: "saving" });
@@ -86,6 +94,7 @@ export default function Profile() {
       setForm(profileToForm(profile));
       setResume(profile.resume);
       setUpdatedAt(profile.updated_at);
+      setAiDraft(false);
       setSaveState({ kind: "success" });
     } catch (error: unknown) {
       const message =
@@ -133,7 +142,18 @@ export default function Profile() {
         )}
       </header>
 
-      <ResumeUpload resume={resume} onResumeChange={setResume} />
+      <ResumeUpload
+        resume={resume}
+        onResumeChange={setResume}
+        onExtracted={handleAiExtracted}
+      />
+
+      {aiDraft && (
+        <div className="alert alert--info" role="status">
+          AI filled the fields below from your resume. Review, edit, or add details,
+          then click <strong>Save profile</strong> to persist changes.
+        </div>
+      )}
 
       <form className="profile-form" onSubmit={handleSubmit}>
         <section className="card">

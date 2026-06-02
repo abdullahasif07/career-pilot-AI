@@ -24,7 +24,7 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def init_db() -> None:
-    from app.models import profile, project  # noqa: F401
+    from app.models import job, profile, project  # noqa: F401
 
     settings.upload_dir.mkdir(parents=True, exist_ok=True)
     Base.metadata.create_all(bind=engine)

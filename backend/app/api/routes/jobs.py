@@ -1,0 +1,53 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from app.core.database import get_db
+from app.schemas.job import JobCreate, JobParseRequest, JobParsed, JobRead, JobUpdate
+from app.services import jobs
+
+router = APIRouter(prefix="/jobs", tags=["jobs"])
+
+
+@router.get("", response_model=list[JobRead])
+def list_jobs(db: Session = Depends(get_db)) -> list[JobRead]:
+    return jobs.list_jobs(db)
+
+
+@router.post("/parse", response_model=JobParsed)
+def parse_job(payload: JobParseRequest) -> JobParsed:
+    try:
+        return jobs.parse_job_description(payload.description)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@router.post("", response_model=JobRead, status_code=201)
+def create_job(payload: JobCreate, db: Session = Depends(get_db)) -> JobRead:
+    return jobs.create_job(db, payload)
+
+
+@router.get("/{job_id}", response_model=JobRead)
+def read_job(job_id: int, db: Session = Depends(get_db)) -> JobRead:
+    job = jobs.get_job(db, job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job
+
+
+@router.put("/{job_id}", response_model=JobRead)
+def update_job(
+    job_id: int,
+    payload: JobUpdate,
+    db: Session = Depends(get_db),
+) -> JobRead:
+    job = jobs.update_job(db, job_id, payload)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job
+
+
+@router.delete("/{job_id}", status_code=204)
+def delete_job(job_id: int, db: Session = Depends(get_db)) -> None:
+    deleted = jobs.delete_job(db, job_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Job not found")

@@ -1,9 +1,4 @@
-import json
-
-from google import genai
-from google.genai import types
-
-from app.core.config import settings
+from app.agents.gemini_client import generate_json
 from app.schemas.resume_extraction import ResumeExtraction
 
 SYSTEM_PROMPT = """You extract structured career profile data from resume text.
@@ -29,31 +24,9 @@ Rules:
 """
 
 
-def _client() -> genai.Client:
-    if not settings.gemini_api_key:
-        msg = "GEMINI_API_KEY is not configured. Add it to the project root .env file."
-        raise RuntimeError(msg)
-    return genai.Client(api_key=settings.gemini_api_key)
-
-
 def extract_profile_from_text(resume_text: str) -> ResumeExtraction:
-    client = _client()
-    response = client.models.generate_content(
-        model=settings.gemini_model,
-        contents=(
-            f"{SYSTEM_PROMPT}\n\n"
-            f"Extract profile fields from this resume:\n\n{resume_text[:12000]}"
-        ),
-        config=types.GenerateContentConfig(
-            temperature=0.1,
-            response_mime_type="application/json",
-        ),
+    data = generate_json(
+        SYSTEM_PROMPT,
+        f"Extract profile fields from this resume:\n\n{resume_text[:12000]}",
     )
-
-    content = response.text
-    if not content:
-        msg = "Gemini returned an empty response."
-        raise RuntimeError(msg)
-
-    data = json.loads(content)
     return ResumeExtraction.model_validate(data)

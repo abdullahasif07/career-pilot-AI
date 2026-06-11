@@ -11,15 +11,8 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
-    proxy: {
-      "/health": {
-        target: "http://localhost:8000",
-        changeOrigin: true,
-      },
-      "/profile": {
-        target: "http://localhost:8000",
-        changeOrigin: true,
-      },
-    },
+    // API calls go directly to VITE_API_URL (localhost:8000).
+    // Do NOT proxy /jobs or /profile here — those are React Router page paths,
+    // and proxying them breaks page reloads (browser gets JSON instead of index.html).
   },
 });

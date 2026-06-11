@@ -1,3 +1,4 @@
+import type { Job, JobCreate, JobParsed, JobUpdate } from "../types/job";
 import type { Profile, ProfileUpdate } from "../types/profile";
 import type { ResumeExtraction } from "../types/resume";
 
@@ -34,6 +35,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       /* use statusText */
     }
     throw new ApiError(message, response.status);
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
   }
 
   return response.json() as Promise<T>;
@@ -73,4 +78,37 @@ export function deleteResume(): Promise<Profile> {
 
 export function extractResume(): Promise<ResumeExtraction> {
   return request<ResumeExtraction>("/profile/resume/extract", { method: "POST" });
+}
+
+export function parseJob(description: string): Promise<JobParsed> {
+  return request<JobParsed>("/jobs/parse", {
+    method: "POST",
+    body: JSON.stringify({ description }),
+  });
+}
+
+export function listJobs(): Promise<Job[]> {
+  return request<Job[]>("/jobs");
+}
+
+export function getJob(id: number): Promise<Job> {
+  return request<Job>(`/jobs/${id}`);
+}
+
+export function createJob(payload: JobCreate): Promise<Job> {
+  return request<Job>("/jobs", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateJob(id: number, payload: JobUpdate): Promise<Job> {
+  return request<Job>(`/jobs/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteJob(id: number): Promise<void> {
+  return request<void>(`/jobs/${id}`, { method: "DELETE" });
 }

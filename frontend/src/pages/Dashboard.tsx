@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ApiError, getHealth, getProfile } from "../api/client";
+import { ApiError, getHealth, getProfile, listJobs } from "../api/client";
 import type { Profile } from "../types/profile";
 
 type ConnectionState =
@@ -11,15 +11,17 @@ type ConnectionState =
 export default function Dashboard() {
   const [connection, setConnection] = useState<ConnectionState>({ kind: "loading" });
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [jobCount, setJobCount] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
 
-    Promise.all([getHealth(), getProfile()])
-      .then(([health, profileData]) => {
+    Promise.all([getHealth(), getProfile(), listJobs()])
+      .then(([health, profileData, jobs]) => {
         if (!cancelled) {
           setConnection({ kind: "connected", status: health.status });
           setProfile(profileData);
+          setJobCount(jobs.length);
         }
       })
       .catch((error: unknown) => {
@@ -80,27 +82,34 @@ export default function Dashboard() {
           </span>
         </Link>
 
-        <div className="action-card action-card--disabled">
+        <Link to="/jobs" className="action-card">
           <span className="action-card__icon" aria-hidden="true">
             JD
           </span>
           <div>
             <h2 className="action-card__title">Jobs</h2>
-            <p className="action-card__desc">Coming in Phase 2 — save & match job descriptions</p>
+            <p className="action-card__desc">
+              {jobCount > 0
+                ? `${jobCount} saved job${jobCount === 1 ? "" : "s"} — paste & parse new JDs`
+                : "Save & parse job descriptions with AI"}
+            </p>
           </div>
-        </div>
+          <span className="action-card__arrow" aria-hidden="true">
+            →
+          </span>
+        </Link>
       </section>
 
       <section className="card card--muted">
-        <h2 className="card__title">Phase 1 complete</h2>
+        <h2 className="card__title">Phase 2 — Jobs</h2>
         <ul className="checklist">
           <li>
-            <code>GET /profile</code> loads your knowledge base from SQLite
+            <code>POST /jobs/parse</code> extracts company, role, skills from a JD
           </li>
           <li>
-            <code>PUT /profile</code> persists changes from the Profile page
+            <code>POST /jobs</code> saves to your application tracker
           </li>
-          <li>Frontend ↔ FastAPI full stack loop is working</li>
+          <li>Update status: interested → applied → interview → offer</li>
         </ul>
       </section>
     </main>

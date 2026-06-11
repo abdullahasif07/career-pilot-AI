@@ -3,6 +3,7 @@ import { NavLink, Outlet } from "react-router-dom";
 const navItems = [
   { to: "/", label: "Dashboard", end: true },
   { to: "/profile", label: "Knowledge Base", end: false },
+  { to: "/jobs", label: "Jobs", end: false },
 ];
 
 export default function Layout() {
@@ -15,7 +16,7 @@ export default function Layout() {
           </span>
           <div>
             <p className="sidebar__title">CareerPilot</p>
-            <p className="sidebar__phase">Phase 1</p>
+            <p className="sidebar__phase">Phase 2</p>
           </div>
         </div>
 

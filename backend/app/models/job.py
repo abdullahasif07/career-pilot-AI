@@ -32,6 +32,14 @@ class JobModel(Base):
     skills: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     responsibilities: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     job_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    match_overall_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    match_strong: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    match_missing: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    match_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    match_computed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

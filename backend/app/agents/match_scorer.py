@@ -1,6 +1,6 @@
 from app.agents.gemini_client import generate_json
 from app.schemas.job import JobRead
-from app.schemas.match import JobMatchResult
+from app.schemas.match import JobMatchScore
 from app.schemas.profile import ProfileRead
 
 SYSTEM_PROMPT = """You score how well a candidate's profile fits a job description.
@@ -61,7 +61,7 @@ def _format_job(job: JobRead) -> str:
     return "\n\n".join(parts)
 
 
-def score_profile_against_job(profile: ProfileRead, job: JobRead) -> JobMatchResult:
+def score_profile_against_job(profile: ProfileRead, job: JobRead) -> JobMatchScore:
     user_prompt = (
         "Score this candidate against the job.\n\n"
         f"=== CANDIDATE PROFILE ===\n{_format_profile(profile)}\n\n"
@@ -69,5 +69,4 @@ def score_profile_against_job(profile: ProfileRead, job: JobRead) -> JobMatchRes
     )
 
     data = generate_json(SYSTEM_PROMPT, user_prompt)
-    result = JobMatchResult.model_validate({**data, "job_id": job.id})
-    return result
+    return JobMatchScore.model_validate(data)

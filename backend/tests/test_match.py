@@ -1,14 +1,34 @@
+from datetime import UTC, datetime
+
 import pytest
 
-from app.schemas.match import JobMatchResult
+from app.schemas.match import JobMatchResult, JobMatchScore
 
 
-def test_get_job_match_not_found(client) -> None:
+def test_get_job_match_not_computed(client) -> None:
+    create = client.post(
+        "/jobs",
+        json={
+            "company": "Acme",
+            "role": "Engineer",
+            "raw_description": "Engineer role with long enough description text here.",
+        },
+    )
+    job_id = create.json()["id"]
+
+    response = client.get(f"/jobs/{job_id}/match")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["computed"] is False
+    assert data["match"] is None
+
+
+def test_get_job_match_job_not_found(client) -> None:
     response = client.get("/jobs/9999/match")
     assert response.status_code == 404
 
 
-def test_get_job_match_success(client, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_compute_and_get_saved_match(client, monkeypatch: pytest.MonkeyPatch) -> None:
     create = client.post(
         "/jobs",
         json={
@@ -30,27 +50,41 @@ def test_get_job_match_success(client, monkeypatch: pytest.MonkeyPatch) -> None:
         },
     )
 
-    def mock_score(profile, job) -> JobMatchResult:
-        return JobMatchResult(
-            job_id=job.id,
+    def mock_score(profile, job) -> JobMatchScore:
+        return JobMatchScore(
             overall_score=87,
             strong=["Python", "LLMs", "RAG"],
             missing=["Kubernetes"],
-            summary="Strong AI fit; add Kubernetes experience to strengthen the application.",
+            summary="Strong AI fit.",
         )
 
     monkeypatch.setattr("app.services.match.score_profile_against_job", mock_score)
 
-    response = client.get(f"/jobs/{job_id}/match")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["overall_score"] == 87
-    assert "Python" in data["strong"]
-    assert "Kubernetes" in data["missing"]
-    assert data["job_id"] == job_id
+    # GET before compute — not saved yet
+    before = client.get(f"/jobs/{job_id}/match")
+    assert before.json()["computed"] is False
+
+    compute = client.post(f"/jobs/{job_id}/match/compute")
+    assert compute.status_code == 200
+    assert compute.json()["overall_score"] == 87
+
+    # GET returns cached score without calling Gemini again
+    call_count = {"n": 0}
+
+    def counting_score(profile, job) -> JobMatchScore:
+        call_count["n"] += 1
+        return mock_score(profile, job)
+
+    monkeypatch.setattr("app.services.match.score_profile_against_job", counting_score)
+
+    cached = client.get(f"/jobs/{job_id}/match")
+    assert cached.status_code == 200
+    assert cached.json()["computed"] is True
+    assert cached.json()["match"]["overall_score"] == 87
+    assert call_count["n"] == 0
 
 
-def test_get_job_match_no_api_key(client, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_compute_job_match_no_api_key(client, monkeypatch: pytest.MonkeyPatch) -> None:
     create = client.post(
         "/jobs",
         json={
@@ -61,10 +95,10 @@ def test_get_job_match_no_api_key(client, monkeypatch: pytest.MonkeyPatch) -> No
     )
     job_id = create.json()["id"]
 
-    def raise_no_key(profile, job) -> JobMatchResult:
+    def raise_no_key(profile, job) -> JobMatchScore:
         raise RuntimeError("GEMINI_API_KEY is not configured.")
 
     monkeypatch.setattr("app.services.match.score_profile_against_job", raise_no_key)
 
-    response = client.get(f"/jobs/{job_id}/match")
+    response = client.post(f"/jobs/{job_id}/match/compute")
     assert response.status_code == 503

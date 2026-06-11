@@ -8,17 +8,29 @@ def migrate_schema(engine: Engine) -> None:
         return
 
     inspector = inspect(engine)
-    if "profiles" not in inspector.get_table_names():
-        return
 
-    existing = {col["name"] for col in inspector.get_columns("profiles")}
-    additions = {
-        "summary": "TEXT",
-        "resume_filename": "VARCHAR(512)",
-        "resume_uploaded_at": "DATETIME",
-    }
+    if "profiles" in inspector.get_table_names():
+        existing = {col["name"] for col in inspector.get_columns("profiles")}
+        profile_additions = {
+            "summary": "TEXT",
+            "resume_filename": "VARCHAR(512)",
+            "resume_uploaded_at": "DATETIME",
+        }
+        with engine.begin() as conn:
+            for column, col_type in profile_additions.items():
+                if column not in existing:
+                    conn.execute(text(f"ALTER TABLE profiles ADD COLUMN {column} {col_type}"))
 
-    with engine.begin() as conn:
-        for column, col_type in additions.items():
-            if column not in existing:
-                conn.execute(text(f"ALTER TABLE profiles ADD COLUMN {column} {col_type}"))
+    if "jobs" in inspector.get_table_names():
+        existing = {col["name"] for col in inspector.get_columns("jobs")}
+        job_additions = {
+            "match_overall_score": "INTEGER",
+            "match_strong": "JSON",
+            "match_missing": "JSON",
+            "match_summary": "TEXT",
+            "match_computed_at": "DATETIME",
+        }
+        with engine.begin() as conn:
+            for column, col_type in job_additions.items():
+                if column not in existing:
+                    conn.execute(text(f"ALTER TABLE jobs ADD COLUMN {column} {col_type}"))

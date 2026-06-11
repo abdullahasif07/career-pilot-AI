@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.schemas.job import JobCreate, JobParseRequest, JobParsed, JobRead, JobUpdate
-from app.services import jobs
+from app.schemas.match import JobMatchResult
+from app.services import jobs, match
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
@@ -24,6 +25,18 @@ def parse_job(payload: JobParseRequest) -> JobParsed:
 @router.post("", response_model=JobRead, status_code=201)
 def create_job(payload: JobCreate, db: Session = Depends(get_db)) -> JobRead:
     return jobs.create_job(db, payload)
+
+
+@router.get("/{job_id}/match", response_model=JobMatchResult)
+def get_job_match(job_id: int, db: Session = Depends(get_db)) -> JobMatchResult:
+    try:
+        result = match.get_job_match(db, job_id)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    if result is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return result
 
 
 @router.get("/{job_id}", response_model=JobRead)

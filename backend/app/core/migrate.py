@@ -29,6 +29,8 @@ def migrate_schema(engine: Engine) -> None:
             "match_missing": "JSON",
             "match_summary": "TEXT",
             "match_computed_at": "DATETIME",
+            "tailored_resume": "JSON",
+            "tailored_resume_generated_at": "DATETIME",
         }
         with engine.begin() as conn:
             for column, col_type in job_additions.items():

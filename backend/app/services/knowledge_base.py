@@ -138,6 +138,15 @@ def delete_resume(db: Session) -> ProfileRead:
     return _profile_to_read(profile)
 
 
+def get_master_resume_text(db: Session) -> str:
+    profile = get_or_create_profile(db)
+    if not profile.resume_filename:
+        msg = "Upload a master resume PDF before tailoring."
+        raise ValueError(msg)
+
+    return extract_text_from_pdf(_resume_path())
+
+
 def extract_resume(db: Session) -> ResumeExtraction:
     profile = get_or_create_profile(db)
     if not profile.resume_filename:

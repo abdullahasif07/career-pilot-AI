@@ -1,4 +1,5 @@
 import type { Job, JobCreate, JobParsed, JobUpdate } from "../types/job";
+import type { JobMatchRead, JobMatchResult } from "../types/match";
 import type { Profile, ProfileUpdate } from "../types/profile";
 import type { ResumeExtraction } from "../types/resume";
 
@@ -111,4 +112,12 @@ export function updateJob(id: number, payload: JobUpdate): Promise<Job> {
 
 export function deleteJob(id: number): Promise<void> {
   return request<void>(`/jobs/${id}`, { method: "DELETE" });
+}
+
+export function getJobMatch(id: number): Promise<JobMatchRead> {
+  return request<JobMatchRead>(`/jobs/${id}/match`);
+}
+
+export function computeJobMatch(id: number): Promise<JobMatchResult> {
+  return request<JobMatchResult>(`/jobs/${id}/match/compute`, { method: "POST" });
 }

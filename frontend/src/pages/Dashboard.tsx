@@ -101,15 +101,13 @@ export default function Dashboard() {
       </section>
 
       <section className="card card--muted">
-        <h2 className="card__title">Phase 2 — Jobs</h2>
+        <h2 className="card__title">Phase 3 — Match score</h2>
         <ul className="checklist">
           <li>
-            <code>POST /jobs/parse</code> extracts company, role, skills from a JD
+            <code>GET /jobs/{`{id}`}/match</code> compares your profile to job requirements
           </li>
-          <li>
-            <code>POST /jobs</code> saves to your application tracker
-          </li>
-          <li>Update status: interested → applied → interview → offer</li>
+          <li>Strong vs missing skills on each job detail page</li>
+          <li>Next: tailor resume for a specific role</li>
         </ul>
       </section>
     </main>

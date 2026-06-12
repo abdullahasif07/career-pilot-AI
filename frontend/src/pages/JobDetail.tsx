@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ApiError, deleteJob, getJob, updateJob } from "../api/client";
+import MatchScoreCard from "../components/MatchScoreCard";
 import StatusBadge from "../components/StatusBadge";
 import TagList from "../components/TagList";
 import type { Job, JobStatus } from "../types/job";
@@ -152,6 +153,8 @@ export default function JobDetail() {
           </p>
         )}
       </section>
+
+      <MatchScoreCard jobId={job.id} />
 
       <section className="card">
         <TagList title="Requirements" items={job.requirements} />

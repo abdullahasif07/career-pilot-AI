@@ -16,7 +16,7 @@ export default function Layout() {
           </span>
           <div>
             <p className="sidebar__title">CareerPilot</p>
-            <p className="sidebar__phase">Phase 2</p>
+            <p className="sidebar__phase">Phase 3</p>
           </div>
         </div>
 

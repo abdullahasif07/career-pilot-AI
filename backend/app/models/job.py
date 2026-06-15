@@ -45,6 +45,11 @@ class JobModel(Base):
         DateTime(timezone=True),
         nullable=True,
     )
+    cover_letter: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    cover_letter_generated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

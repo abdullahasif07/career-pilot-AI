@@ -1,6 +1,7 @@
 from app.schemas.job import JobRead
 from app.schemas.match import JobMatchScore
 from app.schemas.profile import ProfileRead
+from app.schemas.tailored_resume import TailoredResumeContent
 
 
 def format_profile(profile: ProfileRead, *, empty_message: str) -> str:
@@ -53,3 +54,22 @@ def format_match(match: JobMatchScore | None) -> str:
     if match.summary:
         lines.append(f"Summary: {match.summary}")
     return "\n\n".join(lines)
+
+
+def format_tailored_resume(content: TailoredResumeContent | None) -> str:
+    if content is None:
+        return "No tailored resume on file."
+
+    parts: list[str] = []
+    if content.summary:
+        parts.append(f"Summary: {content.summary}")
+
+    for section in content.sections:
+        parts.append(section.heading)
+        for item in section.items:
+            if item.title:
+                parts.append(item.title)
+            for bullet in item.bullets:
+                parts.append(f"- {bullet}")
+
+    return "\n\n".join(parts) if parts else "Tailored resume is empty."

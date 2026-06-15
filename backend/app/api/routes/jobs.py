@@ -3,9 +3,10 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.schemas.job import JobCreate, JobParseRequest, JobParsed, JobRead, JobUpdate
+from app.schemas.cover_letter import JobCoverLetterRead, JobCoverLetterResult
 from app.schemas.match import JobMatchRead, JobMatchResult
 from app.schemas.tailored_resume import JobTailoredResumeRead, JobTailoredResumeResult
-from app.services import jobs, match, resume_tailor
+from app.services import cover_letter, jobs, match, resume_tailor
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
@@ -68,6 +69,32 @@ def compute_job_tailored_resume(
         result = resume_tailor.compute_and_save_job_tailored_resume(db, job_id)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    if result is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return result
+
+
+@router.get("/{job_id}/cover-letter", response_model=JobCoverLetterRead)
+def read_job_cover_letter(
+    job_id: int,
+    db: Session = Depends(get_db),
+) -> JobCoverLetterRead:
+    result = cover_letter.get_saved_job_cover_letter(db, job_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return result
+
+
+@router.post("/{job_id}/cover-letter/compute", response_model=JobCoverLetterResult)
+def compute_job_cover_letter(
+    job_id: int,
+    db: Session = Depends(get_db),
+) -> JobCoverLetterResult:
+    try:
+        result = cover_letter.compute_and_save_job_cover_letter(db, job_id)
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 

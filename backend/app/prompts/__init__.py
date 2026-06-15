@@ -1,6 +1,7 @@
-from app.prompts import job_extractor, match_scorer, resume_extractor, resume_tailorer
+from app.prompts import cover_letter, job_extractor, match_scorer, resume_extractor, resume_tailorer
 
 __all__ = [
+    "cover_letter",
     "job_extractor",
     "match_scorer",
     "resume_extractor",

@@ -115,6 +115,40 @@ def test_compute_and_get_saved_tailored_resume(client, monkeypatch: pytest.Monke
     assert call_count["n"] == 0
 
 
+def test_compute_tailored_resume_corrupt_pdf(client, monkeypatch: pytest.MonkeyPatch) -> None:
+    from tests.conftest import MINIMAL_RESUME_PDF
+
+    create = client.post(
+        "/jobs",
+        json={
+            "company": "Acme",
+            "role": "Engineer",
+            "raw_description": "Engineer role with long enough description text here.",
+        },
+    )
+    job_id = create.json()["id"]
+
+    client.post(
+        "/profile/resume",
+        files={"file": ("resume.pdf", MINIMAL_RESUME_PDF, "application/pdf")},
+    )
+
+    def raise_corrupt(db):
+        raise ValueError(
+            "Could not read this PDF — the file may be corrupted or incomplete. "
+            "Re-upload your master resume from the Knowledge Base page."
+        )
+
+    monkeypatch.setattr(
+        "app.services.resume_tailor.knowledge_base.get_master_resume_text",
+        raise_corrupt,
+    )
+
+    response = client.post(f"/jobs/{job_id}/resume/tailor/compute")
+    assert response.status_code == 400
+    assert "corrupted" in response.json()["detail"].lower()
+
+
 def test_compute_job_tailored_resume_no_api_key(client, monkeypatch: pytest.MonkeyPatch) -> None:
     create = client.post(
         "/jobs",

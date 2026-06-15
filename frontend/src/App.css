@@ -1000,6 +1000,122 @@
   text-decoration: underline;
 }
 
+/* Tailored resume */
+.tailored-resume-card__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 0;
+  color: #64748b;
+  font-size: 0.9375rem;
+}
+
+.tailored-resume-card__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.tailored-resume-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.tailored-resume-card__copy-feedback {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  color: #166534;
+}
+
+.tailored-resume {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.tailored-resume--busy {
+  opacity: 0.65;
+}
+
+.tailored-resume__generated {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #94a3b8;
+}
+
+.tailored-resume__notes {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #475569;
+  background: #f8fafc;
+  border-left: 3px solid #6366f1;
+  border-radius: 0 0.375rem 0.375rem 0;
+}
+
+.tailored-resume__summary p {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: #334155;
+}
+
+.tailored-resume__section-title {
+  margin: 0 0 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #475569;
+}
+
+.tailored-resume__item + .tailored-resume__item {
+  margin-top: 1rem;
+}
+
+.tailored-resume__item-title {
+  margin: 0 0 0.375rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.tailored-resume__bullets {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.tailored-resume__bullets li {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: #334155;
+}
+
+.tailored-resume__bullets li + li {
+  margin-top: 0.375rem;
+}
+
+.tailored-resume__hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #94a3b8;
+}
+
+.tailored-resume__hint a {
+  color: #4f46e5;
+  text-decoration: none;
+}
+
+.tailored-resume__hint a:hover {
+  text-decoration: underline;
+}
+
 .form-actions__feedback {
   margin: 0;
   font-size: 0.875rem;

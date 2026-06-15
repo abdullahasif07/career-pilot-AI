@@ -1,6 +1,7 @@
 import pytest
 
 from app.schemas.resume_extraction import ResumeExtraction
+from tests.conftest import MINIMAL_RESUME_PDF
 
 
 def test_extract_resume_requires_upload(client) -> None:
@@ -12,7 +13,7 @@ def test_extract_resume_requires_upload(client) -> None:
 def test_extract_resume_success(client, monkeypatch: pytest.MonkeyPatch) -> None:
     client.post(
         "/profile/resume",
-        files={"file": ("resume.pdf", b"%PDF-1.4 test", "application/pdf")},
+        files={"file": ("resume.pdf", MINIMAL_RESUME_PDF, "application/pdf")},
     )
 
     monkeypatch.setattr(
@@ -43,7 +44,7 @@ def test_extract_resume_success(client, monkeypatch: pytest.MonkeyPatch) -> None
 def test_extract_resume_no_api_key(client, monkeypatch: pytest.MonkeyPatch) -> None:
     client.post(
         "/profile/resume",
-        files={"file": ("resume.pdf", b"%PDF-1.4 test", "application/pdf")},
+        files={"file": ("resume.pdf", MINIMAL_RESUME_PDF, "application/pdf")},
     )
     monkeypatch.setattr(
         "app.services.knowledge_base.extract_text_from_pdf",

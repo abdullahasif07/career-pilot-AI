@@ -101,13 +101,16 @@ export default function Dashboard() {
       </section>
 
       <section className="card card--muted">
-        <h2 className="card__title">Phase 3 — Match score</h2>
+        <h2 className="card__title">Phase 4 — Tailored resume</h2>
         <ul className="checklist">
           <li>
-            <code>GET /jobs/{`{id}`}/match</code> compares your profile to job requirements
+            <code>GET /jobs/{`{id}`}/resume/tailor</code> loads a saved tailored resume
           </li>
-          <li>Strong vs missing skills on each job detail page</li>
-          <li>Next: tailor resume for a specific role</li>
+          <li>
+            <code>POST /jobs/{`{id}`}/resume/tailor/compute</code> generates from your master PDF
+          </li>
+          <li>Preview sections and copy text on each job detail page</li>
+          <li>Next: cover letter generator</li>
         </ul>
       </section>
     </main>

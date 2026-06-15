@@ -112,8 +112,19 @@ async def upload_resume(db: Session, file: UploadFile) -> ProfileRead:
         msg = f"Resume must be under {settings.max_resume_size_mb} MB."
         raise ValueError(msg)
 
+    if not content.startswith(b"%PDF-"):
+        msg = "Only valid PDF files are supported."
+        raise ValueError(msg)
+
     settings.upload_dir.mkdir(parents=True, exist_ok=True)
-    _resume_path().write_bytes(content)
+    path = _resume_path()
+    path.write_bytes(content)
+
+    try:
+        extract_text_from_pdf(path)
+    except ValueError:
+        path.unlink(missing_ok=True)
+        raise
 
     profile = get_or_create_profile(db)
     profile.resume_filename = file.filename or RESUME_STORAGE_NAME

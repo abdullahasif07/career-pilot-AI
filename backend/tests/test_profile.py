@@ -46,10 +46,11 @@ def test_partial_update_preserves_projects(client) -> None:
 
 
 def test_upload_and_delete_resume(client) -> None:
-    pdf_bytes = b"%PDF-1.4 minimal test resume"
+    from tests.conftest import MINIMAL_RESUME_PDF
+
     upload = client.post(
         "/profile/resume",
-        files={"file": ("resume.pdf", pdf_bytes, "application/pdf")},
+        files={"file": ("resume.pdf", MINIMAL_RESUME_PDF, "application/pdf")},
     )
     assert upload.status_code == 200
     assert upload.json()["resume"]["filename"] == "resume.pdf"
@@ -65,3 +66,12 @@ def test_upload_resume_rejects_non_pdf(client) -> None:
         files={"file": ("resume.txt", b"hello", "text/plain")},
     )
     assert response.status_code == 400
+
+
+def test_upload_resume_rejects_corrupt_pdf(client) -> None:
+    response = client.post(
+        "/profile/resume",
+        files={"file": ("resume.pdf", b"%PDF-1.4 truncated", "application/pdf")},
+    )
+    assert response.status_code == 400
+    assert "corrupted" in response.json()["detail"].lower()

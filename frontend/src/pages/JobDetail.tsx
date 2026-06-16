@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ApiError, deleteJob, getJob, updateJob } from "../api/client";
+import CoverLetterCard from "../components/CoverLetterCard";
 import MatchScoreCard from "../components/MatchScoreCard";
 import TailoredResumeCard from "../components/TailoredResumeCard";
 import StatusBadge from "../components/StatusBadge";
@@ -158,6 +159,8 @@ export default function JobDetail() {
       <MatchScoreCard jobId={job.id} />
 
       <TailoredResumeCard jobId={job.id} />
+
+      <CoverLetterCard jobId={job.id} />
 
       <section className="card">
         <TagList title="Requirements" items={job.requirements} />

@@ -1,5 +1,6 @@
 import type { Job, JobCreate, JobParsed, JobUpdate } from "../types/job";
 import type { JobMatchRead, JobMatchResult } from "../types/match";
+import type { JobCoverLetterRead, JobCoverLetterResult } from "../types/cover_letter";
 import type { JobTailoredResumeRead, JobTailoredResumeResult } from "../types/tailored_resume";
 import type { Profile, ProfileUpdate } from "../types/profile";
 import type { ResumeExtraction } from "../types/resume";
@@ -129,6 +130,16 @@ export function getJobTailoredResume(id: number): Promise<JobTailoredResumeRead>
 
 export function computeJobTailoredResume(id: number): Promise<JobTailoredResumeResult> {
   return request<JobTailoredResumeResult>(`/jobs/${id}/resume/tailor/compute`, {
+    method: "POST",
+  });
+}
+
+export function getJobCoverLetter(id: number): Promise<JobCoverLetterRead> {
+  return request<JobCoverLetterRead>(`/jobs/${id}/cover-letter`);
+}
+
+export function computeJobCoverLetter(id: number): Promise<JobCoverLetterResult> {
+  return request<JobCoverLetterResult>(`/jobs/${id}/cover-letter/compute`, {
     method: "POST",
   });
 }

@@ -28,6 +28,8 @@ export type Profile = {
   github_url: string | null;
   projects: Project[];
   resume: ResumeMeta | null;
+  agent_knowledge_summary: string | null;
+  agent_knowledge_summary_generated_at: string | null;
   created_at: string;
   updated_at: string;
 };

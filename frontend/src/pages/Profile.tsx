@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { ApiError, getProfile, updateProfile } from "../api/client";
 import FormField from "../components/FormField";
+import KnowledgeSummarySection from "../components/KnowledgeSummarySection";
 import ProjectList from "../components/ProjectList";
 import ResumeUpload from "../components/ResumeUpload";
 import type { ProfileFormState, ProfileUpdate, ResumeMeta } from "../types/profile";
@@ -147,6 +148,8 @@ export default function Profile() {
         onResumeChange={setResume}
         onExtracted={handleAiExtracted}
       />
+
+      <KnowledgeSummarySection />
 
       {aiDraft && (
         <div className="alert alert--info" role="status">

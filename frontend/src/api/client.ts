@@ -7,6 +7,13 @@ import type {
   JobCoverLetterResult,
 } from "../types/cover_letter";
 import type { JobTailoredResumeRead, JobTailoredResumeResult } from "../types/tailored_resume";
+import type {
+  KnowledgeSummaryPromptConfig,
+  KnowledgeSummaryPromptUpdate,
+  KnowledgeSummaryRead,
+  KnowledgeSummaryResult,
+  KnowledgeSummaryUpdate,
+} from "../types/knowledge_summary";
 import type { Profile, ProfileUpdate } from "../types/profile";
 import type { ResumeExtraction } from "../types/resume";
 
@@ -92,6 +99,38 @@ export function updateCoverLetterPrompt(
   payload: CoverLetterPromptUpdate,
 ): Promise<CoverLetterPromptConfig> {
   return request<CoverLetterPromptConfig>("/profile/cover-letter/prompt", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getKnowledgeSummary(): Promise<KnowledgeSummaryRead> {
+  return request<KnowledgeSummaryRead>("/profile/knowledge-summary");
+}
+
+export function updateKnowledgeSummary(
+  payload: KnowledgeSummaryUpdate,
+): Promise<KnowledgeSummaryRead> {
+  return request<KnowledgeSummaryRead>("/profile/knowledge-summary", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function computeKnowledgeSummary(): Promise<KnowledgeSummaryResult> {
+  return request<KnowledgeSummaryResult>("/profile/knowledge-summary/compute", {
+    method: "POST",
+  });
+}
+
+export function getKnowledgeSummaryPrompt(): Promise<KnowledgeSummaryPromptConfig> {
+  return request<KnowledgeSummaryPromptConfig>("/profile/knowledge-summary/prompt");
+}
+
+export function updateKnowledgeSummaryPrompt(
+  payload: KnowledgeSummaryPromptUpdate,
+): Promise<KnowledgeSummaryPromptConfig> {
+  return request<KnowledgeSummaryPromptConfig>("/profile/knowledge-summary/prompt", {
     method: "PUT",
     body: JSON.stringify(payload),
   });

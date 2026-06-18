@@ -3,9 +3,11 @@ import { Link } from "react-router-dom";
 import {
   ApiError,
   computeJobCoverLetter,
+  getCoverLetterPrompt,
   getJobCoverLetter,
+  updateCoverLetterPrompt,
 } from "../api/client";
-import type { JobCoverLetterResult } from "../types/cover_letter";
+import type { CoverLetterPromptConfig, JobCoverLetterResult } from "../types/cover_letter";
 import {
   coverLetterToText,
   formatCoverLetterDate,
@@ -21,10 +23,20 @@ type CoverLetterState =
   | { kind: "ready"; result: JobCoverLetterResult }
   | { kind: "error"; message: string };
 
+type PromptEditorState =
+  | { kind: "loading" }
+  | { kind: "ready"; config: CoverLetterPromptConfig; draft: string }
+  | { kind: "error"; message: string };
+
 export default function CoverLetterCard({ jobId }: CoverLetterCardProps) {
   const [state, setState] = useState<CoverLetterState>({ kind: "loading" });
+  const [promptState, setPromptState] = useState<PromptEditorState>({
+    kind: "loading",
+  });
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSavingPrompt, setIsSavingPrompt] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
+  const [promptFeedback, setPromptFeedback] = useState<string | null>(null);
   const [editedSubject, setEditedSubject] = useState("");
   const [editedBody, setEditedBody] = useState("");
 
@@ -46,6 +58,24 @@ export default function CoverLetterCard({ jobId }: CoverLetterCardProps) {
     }
   }, [jobId]);
 
+  const loadPrompt = useCallback(async () => {
+    setPromptState({ kind: "loading" });
+    try {
+      const config = await getCoverLetterPrompt();
+      setPromptState({
+        kind: "ready",
+        config,
+        draft: config.custom_system_prompt ?? config.default_system_prompt,
+      });
+    } catch (error: unknown) {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : "Could not load cover letter prompt.";
+      setPromptState({ kind: "error", message });
+    }
+  }, []);
+
   const runGenerate = useCallback(async () => {
     setIsGenerating(true);
     setCopyFeedback(null);
@@ -65,7 +95,8 @@ export default function CoverLetterCard({ jobId }: CoverLetterCardProps) {
 
   useEffect(() => {
     loadSaved();
-  }, [loadSaved]);
+    loadPrompt();
+  }, [loadSaved, loadPrompt]);
 
   useEffect(() => {
     if (state.kind === "ready") {
@@ -86,6 +117,54 @@ export default function CoverLetterCard({ jobId }: CoverLetterCardProps) {
       setCopyFeedback("Could not copy to clipboard");
     }
   }
+
+  async function handleSavePrompt() {
+    if (promptState.kind !== "ready") return;
+
+    setIsSavingPrompt(true);
+    setPromptFeedback(null);
+    try {
+      const trimmed = promptState.draft.trim();
+      const isDefault = trimmed === promptState.config.default_system_prompt.trim();
+      const config = await updateCoverLetterPrompt({
+        system_prompt: isDefault || !trimmed ? null : trimmed,
+      });
+      setPromptState({
+        kind: "ready",
+        config,
+        draft: config.custom_system_prompt ?? config.default_system_prompt,
+      });
+      setPromptFeedback(
+        config.uses_custom ? "Custom prompt saved" : "Using default prompt",
+      );
+    } catch (error: unknown) {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : "Could not save prompt.";
+      setPromptFeedback(message);
+    } finally {
+      setIsSavingPrompt(false);
+    }
+  }
+
+  function handleResetPrompt() {
+    if (promptState.kind !== "ready") return;
+    setPromptState({
+      ...promptState,
+      draft: promptState.config.default_system_prompt,
+    });
+    setPromptFeedback(null);
+  }
+
+  function handleDraftChange(draft: string) {
+    if (promptState.kind !== "ready") return;
+    setPromptState({ ...promptState, draft });
+    setPromptFeedback(null);
+  }
+
+  const usesCustomPrompt =
+    promptState.kind === "ready" && promptState.config.uses_custom;
 
   return (
     <section className="card cover-letter-card">
@@ -118,6 +197,16 @@ export default function CoverLetterCard({ jobId }: CoverLetterCardProps) {
           </div>
         )}
       </div>
+
+      <CoverLetterPromptEditor
+        state={promptState}
+        isSaving={isSavingPrompt}
+        feedback={promptFeedback}
+        usesCustom={usesCustomPrompt}
+        onDraftChange={handleDraftChange}
+        onSave={handleSavePrompt}
+        onReset={handleResetPrompt}
+      />
 
       {isLoading && (
         <div className="cover-letter-card__loading">
@@ -172,6 +261,104 @@ export default function CoverLetterCard({ jobId }: CoverLetterCardProps) {
         />
       )}
     </section>
+  );
+}
+
+function CoverLetterPromptEditor({
+  state,
+  isSaving,
+  feedback,
+  usesCustom,
+  onDraftChange,
+  onSave,
+  onReset,
+}: {
+  state: PromptEditorState;
+  isSaving: boolean;
+  feedback: string | null;
+  usesCustom: boolean;
+  onDraftChange: (value: string) => void;
+  onSave: () => void;
+  onReset: () => void;
+}) {
+  if (state.kind === "loading") {
+    return (
+      <p className="cover-letter-prompt__loading muted">Loading prompt settings…</p>
+    );
+  }
+
+  if (state.kind === "error") {
+    return (
+      <div className="alert alert--error" role="alert">
+        {state.message}
+      </div>
+    );
+  }
+
+  const draftDiffersFromSaved =
+    state.draft.trim() !==
+    (state.config.custom_system_prompt ?? state.config.default_system_prompt).trim();
+
+  return (
+    <details className="cover-letter-prompt">
+      <summary className="cover-letter-prompt__summary">
+        <span>Customize system prompt</span>
+        {usesCustom && (
+          <span className="cover-letter-prompt__badge">Custom</span>
+        )}
+      </summary>
+
+      <div className="cover-letter-prompt__body">
+        <p className="form-field__hint">
+          Controls tone, style, and rules for every cover letter you generate.
+          JSON output is optional — plain text letters work too.
+        </p>
+
+        <textarea
+          className="form-field__input form-field__input--textarea cover-letter-prompt__textarea"
+          value={state.draft}
+          onChange={(e) => onDraftChange(e.target.value)}
+          rows={12}
+          spellCheck={false}
+        />
+
+        <div className="cover-letter-prompt__actions">
+          <button
+            type="button"
+            className="btn btn--primary btn--sm"
+            onClick={onSave}
+            disabled={isSaving || !state.draft.trim()}
+          >
+            {isSaving ? "Saving…" : "Save prompt"}
+          </button>
+          <button
+            type="button"
+            className="btn btn--ghost btn--sm"
+            onClick={onReset}
+            disabled={isSaving}
+          >
+            Reset to default
+          </button>
+        </div>
+
+        {feedback && (
+          <p
+            className={`cover-letter-prompt__feedback${
+              feedback.includes("Could not") ? " cover-letter-prompt__feedback--error" : ""
+            }`}
+            role="status"
+          >
+            {feedback}
+          </p>
+        )}
+
+        {draftDiffersFromSaved && !feedback && (
+          <p className="cover-letter-prompt__feedback cover-letter-prompt__feedback--warn">
+            Unsaved changes — save before generating to apply your prompt.
+          </p>
+        )}
+      </div>
+    </details>
   );
 }
 

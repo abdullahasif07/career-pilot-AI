@@ -95,6 +95,8 @@ def compute_job_cover_letter(
 ) -> JobCoverLetterResult:
     try:
         result = cover_letter.compute_and_save_job_cover_letter(db, job_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 

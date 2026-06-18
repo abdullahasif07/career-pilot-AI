@@ -74,7 +74,14 @@ def compute_and_save_job_cover_letter(
     match = _match_from_job(job)
     tailored_resume = _tailored_resume_from_job(job)
 
-    content = generate_cover_letter_for_job(profile, job_read, match, tailored_resume)
+    profile_model = knowledge_base.get_or_create_profile(db)
+    content = generate_cover_letter_for_job(
+        profile,
+        job_read,
+        match,
+        tailored_resume,
+        system_prompt=profile_model.cover_letter_system_prompt,
+    )
 
     job.cover_letter = content.model_dump(mode="json")
     job.cover_letter_generated_at = datetime.now(UTC)

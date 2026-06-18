@@ -1,6 +1,11 @@
 import type { Job, JobCreate, JobParsed, JobUpdate } from "../types/job";
 import type { JobMatchRead, JobMatchResult } from "../types/match";
-import type { JobCoverLetterRead, JobCoverLetterResult } from "../types/cover_letter";
+import type {
+  CoverLetterPromptConfig,
+  CoverLetterPromptUpdate,
+  JobCoverLetterRead,
+  JobCoverLetterResult,
+} from "../types/cover_letter";
 import type { JobTailoredResumeRead, JobTailoredResumeResult } from "../types/tailored_resume";
 import type { Profile, ProfileUpdate } from "../types/profile";
 import type { ResumeExtraction } from "../types/resume";
@@ -77,6 +82,19 @@ export function uploadResume(file: File): Promise<Profile> {
 
 export function deleteResume(): Promise<Profile> {
   return request<Profile>("/profile/resume", { method: "DELETE" });
+}
+
+export function getCoverLetterPrompt(): Promise<CoverLetterPromptConfig> {
+  return request<CoverLetterPromptConfig>("/profile/cover-letter/prompt");
+}
+
+export function updateCoverLetterPrompt(
+  payload: CoverLetterPromptUpdate,
+): Promise<CoverLetterPromptConfig> {
+  return request<CoverLetterPromptConfig>("/profile/cover-letter/prompt", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
 }
 
 export function extractResume(): Promise<ResumeExtraction> {

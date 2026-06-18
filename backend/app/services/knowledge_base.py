@@ -6,6 +6,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.agents.resume_extractor import extract_profile_from_text
+from app.prompts import cover_letter as cover_letter_prompts
+from app.schemas.cover_letter import CoverLetterPromptConfig, CoverLetterPromptUpdate
 from app.core.config import settings
 from app.models.profile import PROFILE_ID, ProfileModel
 from app.models.project import ProjectModel
@@ -65,6 +67,30 @@ def get_profile(db: Session) -> ProfileRead:
     profile = get_or_create_profile(db)
     db.refresh(profile, attribute_names=["projects"])
     return _profile_to_read(profile)
+
+
+def get_cover_letter_prompt_config(db: Session) -> CoverLetterPromptConfig:
+    profile = get_or_create_profile(db)
+    custom = profile.cover_letter_system_prompt
+    return CoverLetterPromptConfig(
+        default_system_prompt=cover_letter_prompts.SYSTEM,
+        custom_system_prompt=custom,
+        uses_custom=bool(custom and custom.strip()),
+    )
+
+
+def update_cover_letter_prompt(
+    db: Session,
+    payload: CoverLetterPromptUpdate,
+) -> CoverLetterPromptConfig:
+    profile = get_or_create_profile(db)
+    raw = payload.system_prompt
+    profile.cover_letter_system_prompt = (
+        raw.strip() if raw and raw.strip() else None
+    )
+    db.commit()
+    db.refresh(profile)
+    return get_cover_letter_prompt_config(db)
 
 
 def _sync_projects(db: Session, profile: ProfileModel, projects: list[ProjectInput]) -> None:

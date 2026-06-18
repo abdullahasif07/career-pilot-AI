@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.schemas.cover_letter import CoverLetterPromptConfig, CoverLetterPromptUpdate
 from app.schemas.profile import ProfileRead, ProfileUpdate
 from app.schemas.resume_extraction import ResumeExtraction
 from app.services import knowledge_base
@@ -36,6 +37,19 @@ async def upload_resume(
 @router.delete("/resume", response_model=ProfileRead)
 def remove_resume(db: Session = Depends(get_db)) -> ProfileRead:
     return knowledge_base.delete_resume(db)
+
+
+@router.get("/cover-letter/prompt", response_model=CoverLetterPromptConfig)
+def read_cover_letter_prompt(db: Session = Depends(get_db)) -> CoverLetterPromptConfig:
+    return knowledge_base.get_cover_letter_prompt_config(db)
+
+
+@router.put("/cover-letter/prompt", response_model=CoverLetterPromptConfig)
+def update_cover_letter_prompt(
+    payload: CoverLetterPromptUpdate,
+    db: Session = Depends(get_db),
+) -> CoverLetterPromptConfig:
+    return knowledge_base.update_cover_letter_prompt(db, payload)
 
 
 @router.post("/resume/extract", response_model=ResumeExtraction)

@@ -30,3 +30,19 @@ def generate_json(system_prompt: str, user_prompt: str) -> dict:
         raise RuntimeError(msg)
 
     return json.loads(content)
+
+
+def generate_text(system_prompt: str, user_prompt: str) -> str:
+    client = get_client()
+    response = client.models.generate_content(
+        model=settings.gemini_model,
+        contents=f"{system_prompt}\n\n{user_prompt}",
+        config=types.GenerateContentConfig(temperature=0.1),
+    )
+
+    content = response.text
+    if not content or not content.strip():
+        msg = "Gemini returned an empty response."
+        raise RuntimeError(msg)
+
+    return content.strip()

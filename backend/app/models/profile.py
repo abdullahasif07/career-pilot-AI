@@ -25,6 +25,7 @@ class ProfileModel(Base):
         DateTime(timezone=True),
         nullable=True,
     )
+    cover_letter_system_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

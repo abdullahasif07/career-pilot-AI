@@ -15,6 +15,7 @@ def migrate_schema(engine: Engine) -> None:
             "summary": "TEXT",
             "resume_filename": "VARCHAR(512)",
             "resume_uploaded_at": "DATETIME",
+            "cover_letter_system_prompt": "TEXT",
         }
         with engine.begin() as conn:
             for column, col_type in profile_additions.items():

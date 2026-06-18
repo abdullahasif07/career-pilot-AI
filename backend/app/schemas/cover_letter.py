@@ -17,3 +17,13 @@ class JobCoverLetterResult(CoverLetterContent):
 class JobCoverLetterRead(BaseModel):
     computed: bool
     cover_letter: JobCoverLetterResult | None = None
+
+
+class CoverLetterPromptConfig(BaseModel):
+    default_system_prompt: str
+    custom_system_prompt: str | None = None
+    uses_custom: bool
+
+
+class CoverLetterPromptUpdate(BaseModel):
+    system_prompt: str | None = None

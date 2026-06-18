@@ -26,6 +26,12 @@ class ProfileModel(Base):
         nullable=True,
     )
     cover_letter_system_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
+    agent_knowledge_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    agent_knowledge_summary_generated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    agent_knowledge_summary_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

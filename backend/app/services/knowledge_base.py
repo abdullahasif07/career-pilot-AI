@@ -6,11 +6,20 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.agents.resume_extractor import extract_profile_from_text
-from app.prompts import cover_letter as cover_letter_prompts
-from app.schemas.cover_letter import CoverLetterPromptConfig, CoverLetterPromptUpdate
+from app.agents.knowledge_summarizer import summarize_knowledge_base
 from app.core.config import settings
 from app.models.profile import PROFILE_ID, ProfileModel
 from app.models.project import ProjectModel
+from app.prompts import cover_letter as cover_letter_prompts
+from app.prompts import knowledge_summary as knowledge_summary_prompts
+from app.schemas.cover_letter import CoverLetterPromptConfig, CoverLetterPromptUpdate
+from app.schemas.knowledge_summary import (
+    KnowledgeSummaryPromptConfig,
+    KnowledgeSummaryPromptUpdate,
+    KnowledgeSummaryRead,
+    KnowledgeSummaryResult,
+    KnowledgeSummaryUpdate,
+)
 from app.schemas.profile import ProfileRead, ProfileUpdate, ResumeMeta
 from app.schemas.project import ProjectInput
 from app.schemas.resume_extraction import ResumeExtraction
@@ -58,6 +67,8 @@ def _profile_to_read(profile: ProfileModel) -> ProfileRead:
         github_url=profile.github_url,
         projects=profile.projects,
         resume=_build_resume_meta(profile),
+        agent_knowledge_summary=profile.agent_knowledge_summary,
+        agent_knowledge_summary_generated_at=profile.agent_knowledge_summary_generated_at,
         created_at=profile.created_at,
         updated_at=profile.updated_at,
     )
@@ -91,6 +102,95 @@ def update_cover_letter_prompt(
     db.commit()
     db.refresh(profile)
     return get_cover_letter_prompt_config(db)
+
+
+def get_knowledge_summary(db: Session) -> KnowledgeSummaryRead:
+    profile = get_or_create_profile(db)
+    summary = profile.agent_knowledge_summary
+    return KnowledgeSummaryRead(
+        summary=summary,
+        generated_at=profile.agent_knowledge_summary_generated_at,
+        has_summary=bool(summary and summary.strip()),
+    )
+
+
+def update_knowledge_summary(
+    db: Session,
+    payload: KnowledgeSummaryUpdate,
+) -> KnowledgeSummaryRead:
+    profile = get_or_create_profile(db)
+    raw = payload.summary
+    profile.agent_knowledge_summary = raw.strip() if raw and raw.strip() else None
+    if profile.agent_knowledge_summary is None:
+        profile.agent_knowledge_summary_generated_at = None
+    db.commit()
+    db.refresh(profile)
+    return get_knowledge_summary(db)
+
+
+def get_knowledge_summary_prompt_config(db: Session) -> KnowledgeSummaryPromptConfig:
+    profile = get_or_create_profile(db)
+    custom = profile.agent_knowledge_summary_prompt
+    return KnowledgeSummaryPromptConfig(
+        default_system_prompt=knowledge_summary_prompts.SYSTEM,
+        custom_system_prompt=custom,
+        uses_custom=bool(custom and custom.strip()),
+    )
+
+
+def update_knowledge_summary_prompt(
+    db: Session,
+    payload: KnowledgeSummaryPromptUpdate,
+) -> KnowledgeSummaryPromptConfig:
+    profile = get_or_create_profile(db)
+    raw = payload.system_prompt
+    profile.agent_knowledge_summary_prompt = (
+        raw.strip() if raw and raw.strip() else None
+    )
+    db.commit()
+    db.refresh(profile)
+    return get_knowledge_summary_prompt_config(db)
+
+
+def _optional_resume_text(db: Session) -> str | None:
+    profile = get_or_create_profile(db)
+    if not profile.resume_filename:
+        return None
+    path = _resume_path()
+    if not path.exists():
+        return None
+    try:
+        return extract_text_from_pdf(path)
+    except ValueError:
+        return None
+
+
+def compute_knowledge_summary(db: Session) -> KnowledgeSummaryResult:
+    profile = get_or_create_profile(db)
+    db.refresh(profile, attribute_names=["projects"])
+    profile_read = _profile_to_read(profile)
+
+    if not profile_read.name and not profile_read.summary and not profile_read.projects:
+        msg = "Add profile details or projects before generating a knowledge summary."
+        raise ValueError(msg)
+
+    resume_text = _optional_resume_text(db)
+    summary = summarize_knowledge_base(
+        profile_read,
+        resume_text,
+        system_prompt=profile.agent_knowledge_summary_prompt,
+    )
+
+    profile.agent_knowledge_summary = summary
+    profile.agent_knowledge_summary_generated_at = datetime.now(UTC)
+    db.commit()
+    db.refresh(profile)
+
+    assert profile.agent_knowledge_summary_generated_at is not None
+    return KnowledgeSummaryResult(
+        summary=summary,
+        generated_at=profile.agent_knowledge_summary_generated_at,
+    )
 
 
 def _sync_projects(db: Session, profile: ProfileModel, projects: list[ProjectInput]) -> None:

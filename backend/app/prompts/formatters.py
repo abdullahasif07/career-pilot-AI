@@ -5,6 +5,9 @@ from app.schemas.tailored_resume import TailoredResumeContent
 
 
 def format_profile(profile: ProfileRead, *, empty_message: str) -> str:
+    if profile.agent_knowledge_summary and profile.agent_knowledge_summary.strip():
+        return profile.agent_knowledge_summary.strip()
+
     sections: list[str] = []
 
     if profile.name:

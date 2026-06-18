@@ -29,6 +29,8 @@ class ProfileRead(ProfileBase):
     id: int
     projects: list[ProjectRead]
     resume: ResumeMeta | None
+    agent_knowledge_summary: str | None = None
+    agent_knowledge_summary_generated_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 

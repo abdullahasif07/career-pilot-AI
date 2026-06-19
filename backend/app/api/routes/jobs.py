@@ -4,9 +4,10 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.schemas.job import JobCreate, JobParseRequest, JobParsed, JobRead, JobUpdate
 from app.schemas.cover_letter import JobCoverLetterRead, JobCoverLetterResult
+from app.schemas.interview_prep import JobInterviewPrepRead, JobInterviewPrepResult
 from app.schemas.match import JobMatchRead, JobMatchResult
 from app.schemas.tailored_resume import JobTailoredResumeRead, JobTailoredResumeResult
-from app.services import cover_letter, jobs, match, resume_tailor
+from app.services import cover_letter, interview_prep, jobs, match, resume_tailor
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
@@ -95,6 +96,34 @@ def compute_job_cover_letter(
 ) -> JobCoverLetterResult:
     try:
         result = cover_letter.compute_and_save_job_cover_letter(db, job_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    if result is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return result
+
+
+@router.get("/{job_id}/interview-prep", response_model=JobInterviewPrepRead)
+def read_job_interview_prep(
+    job_id: int,
+    db: Session = Depends(get_db),
+) -> JobInterviewPrepRead:
+    result = interview_prep.get_saved_job_interview_prep(db, job_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return result
+
+
+@router.post("/{job_id}/interview-prep/compute", response_model=JobInterviewPrepResult)
+def compute_job_interview_prep(
+    job_id: int,
+    db: Session = Depends(get_db),
+) -> JobInterviewPrepResult:
+    try:
+        result = interview_prep.compute_and_save_job_interview_prep(db, job_id)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except RuntimeError as exc:

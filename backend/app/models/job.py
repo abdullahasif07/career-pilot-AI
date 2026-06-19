@@ -50,6 +50,11 @@ class JobModel(Base):
         DateTime(timezone=True),
         nullable=True,
     )
+    interview_prep: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    interview_prep_generated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
